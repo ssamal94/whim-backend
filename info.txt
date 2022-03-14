@@ -1,0 +1,2 @@
+First do npm install
+To start database: nodemon index.js
