@@ -3,6 +3,7 @@ import cors from "cors";
 import mongoose from "mongoose";
 import logger from "./logger.js";
 import { userSchema, User } from "./models/user.js";
+import { productSchema, Product } from "./models/product.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
@@ -59,20 +60,25 @@ app.post("/forgot_password", (req, res) => {
 
       var mailOptions = {
         from: "whimsix6@gmail.com",
-        to: "shubhamwhim@yopmail.com",
+        to: user.email,
         subject: "Password reset",
         html: `<div><h3> Please click on the below link to reset your password <h3> <div>
                 <div> <a href="${link}" style="color:red">Reset Password</a>  <div/><br>
                 <div> This link will expire in 5 minutes, if so, you may request for a new link. <div/>`,
       };
 
-      transporter.sendMail(mailOptions, function (error, info) {
-        if (error) {
-          console.log(error);
-        } else {
-          console.log("Email sent: " + info.response);
-        }
-      });
+      try {
+        transporter.sendMail(mailOptions, function (error, info) {
+          if (error) {
+            console.log(error);
+          } else {
+            console.log("Email sent: " + info.response);
+          }
+        });
+      } catch (error) {
+        logger.info(error);
+        res.send({ message: "Incorrect email" });
+      }
       //-------------------------------------
 
       res.send({
@@ -128,17 +134,25 @@ app.post("/login", (req, res) => {
           { expiresIn: "1h" }
         );
 
+        //check if user has Author details
+        let isAuthor = false;
+        if (user.aboutAuthor !== "empty") {
+          isAuthor = true;
+        }
+
         //send status to frontend
         res.send({
           message: "User Logged In",
           token: accessToken,
           name: user.name,
+          isAuthor: isAuthor,
+          email: user.email,
         });
       } else {
         res.send({ message: "Incorrect Password" });
       }
     } else {
-      res.send("User not found");
+      res.send({ message: "User not found" });
     }
   });
 });
@@ -154,6 +168,11 @@ app.post("/register", (req, res) => {
         name: name,
         email: email,
         password: password,
+        aboutAuthor: "empty",
+        introAuthor: "empty",
+        isSubscribed: false,
+        paidFor: { postIds: {} },
+        posts: { postIds: {} },
       });
 
       //Password hashing
