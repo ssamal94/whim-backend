@@ -8,7 +8,7 @@ const userSchema = new mongoose.Schema({
   aboutAuthor: String,
   introAuthor: String,
   isSubscribed: Boolean,
-  paidFor: Object,
+  profilePic: String,
   posts: Object,
 });
 

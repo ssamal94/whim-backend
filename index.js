@@ -3,11 +3,12 @@ import cors from "cors";
 import mongoose from "mongoose";
 import logger from "./logger.js";
 import { userSchema, User } from "./models/user.js";
-import { productSchema, Product } from "./models/product.js";
+import { productSchema, Product } from "./models/products.js";
 import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
+import { ObjectId } from "mongodb";
 
 dotenv.config();
 
@@ -147,6 +148,7 @@ app.post("/login", (req, res) => {
           name: user.name,
           isAuthor: isAuthor,
           email: user.email,
+          isSubscribed: user.isSubscribed,
         });
       } else {
         res.send({ message: "Incorrect Password" });
@@ -171,7 +173,7 @@ app.post("/register", (req, res) => {
         aboutAuthor: "empty",
         introAuthor: "empty",
         isSubscribed: false,
-        paidFor: { postIds: {} },
+        profilePic: "",
         posts: { postIds: {} },
       });
 
@@ -192,36 +194,150 @@ app.post("/register", (req, res) => {
 
 //Add a new post
 app.post("/addPost", (req, res) => {
-  const { email, password } = req.body;
-  User.findOne({ email: email }, (err, user) => {
+  let isAuthor = "false";
+  const {
+    category,
+    coverImage,
+    title,
+    aboutCorse,
+    preRequisite,
+    videoLinks,
+    email,
+  } = req.body;
+  let authorId = "";
+  User.findOne({ email: email }, async (err, user) => {
     if (user) {
-      if (user.password === password) {
-        res.send({ message: "User Logged In" });
-      } else {
-        res.send({ message: "Incorrect Password" });
+      //save user id
+      authorId = user._id;
+      //check if user is author
+      if (user.aboutAuthor !== "empty") {
+        isAuthor = "true";
       }
+
+      const product = new Product({
+        authorId: authorId,
+        authorName: user.name,
+        authorImage: user.profilePic,
+        category: category,
+        coverImage: coverImage,
+        title: title,
+        aboutCorse: aboutCorse,
+        preRequisite: preRequisite,
+        videoLinks: videoLinks,
+      });
+
+      product.save((err) => {
+        if (err) {
+          res.send(err);
+        } else res.send({ status: "ok", isAuthor: isAuthor });
+      });
     } else {
-      res.send("User not found");
+      res.send({ message: "error finding user" });
     }
   });
+});
+
+//Fetch all posts
+app.get("/getAllPosts", async (req, res) => {
+  let results = [];
+  results = await Product.find();
+  if (results) {
+    res.send({ message: "ok", results: results });
+  } else {
+    res.send({ message: "Error in query." });
+  }
+});
+
+//Fetch posts for a specific user
+app.get("/getUserPosts", (req, res) => {
+  const { email } = req.body;
+  let results = [];
+  Product.find();
 });
 
 //Delete a post
 app.post("/deletePost", (req, res) => {
-  const { email, password } = req.body;
-  User.findOne({ email: email }, (err, user) => {
-    if (user) {
-      if (user.password === password) {
-        res.send({ message: "User Logged In" });
-      } else {
-        res.send({ message: "Incorrect Password" });
-      }
+  const { postId } = req.body;
+  Product.findOne({ _id: postId }, async (err, product) => {
+    if (product) {
+      await Product.remove({ _id: postId });
+      res.send({ message: "post deleted", status: "ok" });
     } else {
-      res.send("User not found");
+      res.send({ message: err });
     }
   });
 });
 
+//Subscribe user
+app.post("/subscribe", (req, res) => {
+  const { email } = req.body;
+  const user = User.findOne({ email: email }, async (err, user) => {
+    if (user) {
+      await User.updateOne({ email: email }, { isSubscribed: true });
+      res.send({
+        message: "user subscribed",
+        status: "ok",
+        isSubscribed: true,
+      });
+    } else {
+      res.send({ message: err });
+    }
+  });
+});
+
+//Stop user subscription
+app.post("/unsubscribe", (req, res) => {
+  console.log(req.body);
+  const { email } = req.body;
+  const user = User.findOne({ email: email }, async (err, user) => {
+    if (user) {
+      await User.updateOne({ email: email }, { isSubscribed: false });
+      res.send({
+        message: "user subscribed",
+        status: "ok",
+        isSubscribed: false,
+      });
+    } else {
+      res.send({ message: err });
+    }
+  });
+});
+
+//Save Author details
+app.post("/saveAuthor", (req, res) => {
+  const { profilePic, intro, description, email } = req.body;
+  const user = User.findOne({ email: email }, async (err, user) => {
+    if (user) {
+      await User.updateOne(
+        { email: email },
+        { introAuthor: intro, aboutAuthor: description, profilePic: profilePic }
+      );
+      res.send({
+        message: "user details updated",
+        status: "ok",
+      });
+    } else {
+      res.send({ message: err });
+    }
+  });
+});
+
+//Get author details
+app.post("/getAuthor", (req, res) => {
+  const { id } = req.body;
+  var o_id = new ObjectId(id);
+  const user = User.findOne({ _id: o_id }, (err, user) => {
+    if (user) {
+      res.send({
+        intro: user.introAuthor,
+        about: user.aboutAuthor,
+        message: "ok",
+      });
+    } else res.send({ message: "User not found" });
+  });
+});
+
+//START APP SERVER
 app.listen(9032, () => {
   logger.info("Backend started at port 9032");
 });

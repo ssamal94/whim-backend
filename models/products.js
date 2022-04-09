@@ -3,8 +3,10 @@ import mongoose from "mongoose";
 //Schema Creation
 const productSchema = new mongoose.Schema({
   authorId: String,
+  authorName: String,
+  authorImage: String,
   category: String,
-  coverImage: Object,
+  coverImage: String,
   title: String,
   aboutCorse: String,
   preRequisite: String,
@@ -12,6 +14,6 @@ const productSchema = new mongoose.Schema({
 });
 
 //Model Creation
-const Product = new mongoose.model("Product", productSchema);
+const Product = new mongoose.model("products", productSchema);
 
 export { productSchema, Product };
