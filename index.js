@@ -8,6 +8,7 @@ import jwt from "jsonwebtoken";
 import dotenv from "dotenv";
 import bcrypt from "bcrypt";
 import nodemailer from "nodemailer";
+import { ObjectId } from "mongodb";
 
 dotenv.config();
 
@@ -215,6 +216,8 @@ app.post("/addPost", (req, res) => {
 
       const product = new Product({
         authorId: authorId,
+        authorName: user.name,
+        authorImage: user.profilePic,
         category: category,
         coverImage: coverImage,
         title: title,
@@ -234,18 +237,33 @@ app.post("/addPost", (req, res) => {
   });
 });
 
+//Fetch all posts
+app.get("/getAllPosts", async (req, res) => {
+  let results = [];
+  results = await Product.find();
+  if (results) {
+    res.send({ message: "ok", results: results });
+  } else {
+    res.send({ message: "Error in query." });
+  }
+});
+
+//Fetch posts for a specific user
+app.get("/getUserPosts", (req, res) => {
+  const { email } = req.body;
+  let results = [];
+  Product.find();
+});
+
 //Delete a post
 app.post("/deletePost", (req, res) => {
-  const { email, password } = req.body;
-  User.findOne({ email: email }, (err, user) => {
-    if (user) {
-      if (user.password === password) {
-        res.send({ message: "User Logged In" });
-      } else {
-        res.send({ message: "Incorrect Password" });
-      }
+  const { postId } = req.body;
+  Product.findOne({ _id: postId }, async (err, product) => {
+    if (product) {
+      await Product.remove({ _id: postId });
+      res.send({ message: "post deleted", status: "ok" });
     } else {
-      res.send("User not found");
+      res.send({ message: err });
     }
   });
 });
@@ -285,6 +303,41 @@ app.post("/unsubscribe", (req, res) => {
   });
 });
 
+//Save Author details
+app.post("/saveAuthor", (req, res) => {
+  const { profilePic, intro, description, email } = req.body;
+  const user = User.findOne({ email: email }, async (err, user) => {
+    if (user) {
+      await User.updateOne(
+        { email: email },
+        { introAuthor: intro, aboutAuthor: description, profilePic: profilePic }
+      );
+      res.send({
+        message: "user details updated",
+        status: "ok",
+      });
+    } else {
+      res.send({ message: err });
+    }
+  });
+});
+
+//Get author details
+app.post("/getAuthor", (req, res) => {
+  const { id } = req.body;
+  var o_id = new ObjectId(id);
+  const user = User.findOne({ _id: o_id }, (err, user) => {
+    if (user) {
+      res.send({
+        intro: user.introAuthor,
+        about: user.aboutAuthor,
+        message: "ok",
+      });
+    } else res.send({ message: "User not found" });
+  });
+});
+
+//START APP SERVER
 app.listen(9032, () => {
   logger.info("Backend started at port 9032");
 });

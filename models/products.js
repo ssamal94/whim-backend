@@ -3,6 +3,8 @@ import mongoose from "mongoose";
 //Schema Creation
 const productSchema = new mongoose.Schema({
   authorId: String,
+  authorName: String,
+  authorImage: String,
   category: String,
   coverImage: String,
   title: String,
