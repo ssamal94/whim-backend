@@ -72,6 +72,7 @@ app.post("/forgot_password", (req, res) => {
         transporter.sendMail(mailOptions, function (error, info) {
           if (error) {
             console.log(error);
+            logger.error(error);
           } else {
             console.log("Email sent: " + info.response);
           }
@@ -249,10 +250,32 @@ app.get("/getAllPosts", async (req, res) => {
 });
 
 //Fetch posts for a specific user
-app.get("/getUserPosts", (req, res) => {
-  const { email } = req.body;
+app.post("/getUserPosts", (req, res) => {
   let results = [];
-  Product.find();
+  const { email } = req.body;
+
+  User.findOne({ email: email }, async (err, user) => {
+    if (user) {
+      if (user.aboutAuthor !== "empty") {
+        var o_id = new ObjectId(user._id);
+        results = await Product.find();
+        if (results) {
+          res.send({
+            message: "ok",
+            results: results,
+            aboutAuthor: user.aboutAuthor,
+            isSubscribed: user.isSubscribed,
+          });
+        } else {
+          res.send({ message: "You do not have any active post." });
+        }
+      } else {
+        res.send({ message: "incomplete profile" });
+      }
+    } else {
+      res.send({ message: "error fetching user" });
+    }
+  });
 });
 
 //Delete a post
@@ -261,7 +284,7 @@ app.post("/deletePost", (req, res) => {
   Product.findOne({ _id: postId }, async (err, product) => {
     if (product) {
       await Product.remove({ _id: postId });
-      res.send({ message: "post deleted", status: "ok" });
+      res.send({ message: "post deleted" });
     } else {
       res.send({ message: err });
     }
@@ -287,15 +310,13 @@ app.post("/subscribe", (req, res) => {
 
 //Stop user subscription
 app.post("/unsubscribe", (req, res) => {
-  console.log(req.body);
   const { email } = req.body;
   const user = User.findOne({ email: email }, async (err, user) => {
     if (user) {
       await User.updateOne({ email: email }, { isSubscribed: false });
       res.send({
-        message: "user subscribed",
+        message: "user unsunscribed",
         status: "ok",
-        isSubscribed: false,
       });
     } else {
       res.send({ message: err });
