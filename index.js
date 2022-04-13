@@ -258,13 +258,14 @@ app.post("/getUserPosts", (req, res) => {
     if (user) {
       if (user.aboutAuthor !== "empty") {
         var o_id = new ObjectId(user._id);
-        results = await Product.find();
+        results = await Product.find({ authorId: o_id });
         if (results) {
           res.send({
             message: "ok",
             results: results,
             aboutAuthor: user.aboutAuthor,
             isSubscribed: user.isSubscribed,
+            pic: user.profilePic,
           });
         } else {
           res.send({ message: "You do not have any active post." });
