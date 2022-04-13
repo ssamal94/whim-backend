@@ -15,8 +15,8 @@ dotenv.config();
 let resetSecret;
 
 const app = express();
-app.use(express.json());
-app.use(express.urlencoded());
+app.use(express.json({ limit: "50mb" }));
+app.use(express.urlencoded({ limit: "50mb" }));
 app.use(cors());
 
 //Database connection
@@ -281,10 +281,11 @@ app.post("/getUserPosts", (req, res) => {
 //Delete a post
 app.post("/deletePost", (req, res) => {
   const { postId } = req.body;
-  Product.findOne({ _id: postId }, async (err, product) => {
+  const o_id = new ObjectId(postId);
+  Product.findOne({ _id: o_id }, async (err, product) => {
     if (product) {
-      await Product.remove({ _id: postId });
-      res.send({ message: "post deleted" });
+      await Product.remove({ _id: o_id });
+      res.send({ message: "ok" });
     } else {
       res.send({ message: err });
     }
