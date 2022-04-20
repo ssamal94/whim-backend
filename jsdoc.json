@@ -1,0 +1,17 @@
+{
+  "plugins": ["plugins/markdown", "node_modules/jsdoc-vuejs"],
+  "source": {
+    "include": ["src"],
+    "includePattern": "\\.(js)$",
+    "excludePattern": "(node_modules/|docs)"
+  },
+  "templates": {
+    "cleverLinks": true,
+    "monospaceLinks": true
+  },
+  "opts": {
+    "template": "templates/default",
+    "destination": "./docs/",
+    "recurse": true
+  }
+}
