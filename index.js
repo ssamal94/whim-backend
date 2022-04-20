@@ -78,7 +78,7 @@ app.post("/forgot_password", (req, res) => {
           }
         });
       } catch (error) {
-        logger.info(error);
+        logger.error(error);
         res.send({ message: "Incorrect email" });
       }
       //-------------------------------------
@@ -118,6 +118,7 @@ app.post("/reset_password/:email/:resetToken", (req, res) => {
       status: "ok",
     });
   } catch (error) {
+    logger.error(error);
     res.send({ message: "Session expired, please request for a new link." });
   }
 });
@@ -187,7 +188,9 @@ app.post("/register", (req, res) => {
       user.save((err) => {
         if (err) {
           res.send(err);
-        } else res.send({ message: "User Added" });
+        } else {
+          res.send({ message: "User Added" });
+        }
       });
     }
   });
@@ -233,6 +236,7 @@ app.post("/addPost", (req, res) => {
         } else res.send({ status: "ok", isAuthor: isAuthor });
       });
     } else {
+      logger.error("error finding user inside Add New Post service call");
       res.send({ message: "error finding user" });
     }
   });
@@ -245,6 +249,9 @@ app.get("/getAllPosts", async (req, res) => {
   if (results) {
     res.send({ message: "ok", results: results });
   } else {
+    logger.error(
+      "Error in Find Product query inside Get All Post service call"
+    );
     res.send({ message: "Error in query." });
   }
 });
@@ -274,6 +281,7 @@ app.post("/getUserPosts", (req, res) => {
         res.send({ message: "incomplete profile" });
       }
     } else {
+      logger.error("error fetching user inside Get User Posts service call");
       res.send({ message: "error fetching user" });
     }
   });
@@ -292,6 +300,7 @@ app.post("/deletePost", (req, res) => {
       if (results) {
         res.send({ message: "ok", results: results });
       } else {
+        logger.error("Error in find product query at Delete Post service call");
         res.send({ message: "Error in query.", results: null });
       }
     } else {
