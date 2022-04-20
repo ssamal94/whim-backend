@@ -286,7 +286,14 @@ app.post("/deletePost", (req, res) => {
   Product.findOne({ _id: o_id }, async (err, product) => {
     if (product) {
       await Product.remove({ _id: o_id });
-      res.send({ message: "ok" });
+
+      let results = [];
+      results = await Product.find();
+      if (results) {
+        res.send({ message: "ok", results: results });
+      } else {
+        res.send({ message: "Error in query.", results: null });
+      }
     } else {
       res.send({ message: err });
     }
