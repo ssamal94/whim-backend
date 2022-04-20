@@ -1,23 +1,19 @@
-# About this project
+## About this project:
 
 ### Project Name: Whim (Backend)
 
-This app is a server and handles the database and business logic for project "WHIM".
+This a server that handles the database and business logic for project "WHIM".
 
-# About the author:
+## About the author:
 
-This app is fully developed and maintained by
+This app is fully developed and maintained by:
 
 ### Swagat Samal (Ssamal1788@conestogac.on.ca)
 
-## Available Scripts
+## Available Scripts:
 
-In the project directory, you can run below command to
+### start the server: "npm start"
 
-start the app server:
+### generate code documetation : "npm generate:docs"
 
-### `npm start`
-
-generate code documetation (uses JsDoc):
-
-### `npm generate:docs`
+\*this very website you are viewing
